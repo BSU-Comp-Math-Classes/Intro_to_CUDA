@@ -1,4 +1,4 @@
-APPS=hello1 hello2 add
+APPS=hello sumArraysOnHost sumArraysOnGPU sumArraysOnGPU-timer checkDeviceInfor
 
 all: ${APPS}
 
