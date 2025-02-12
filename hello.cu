@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 __global__ void helloFromGPU(void) {
-  printf("Hello World from GPU, thread %d\n",threadIdx.x);
+  printf("Hello World from GPU, thread %d of block %d \n",threadIdx.x,blockIdx.x);
 }
 
 

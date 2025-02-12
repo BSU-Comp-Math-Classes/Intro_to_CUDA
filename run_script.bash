@@ -6,11 +6,11 @@
 #SBATCH -n 1
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
-#SBATCH --job-name=hello
-#SBATCH --output=hello.o%j
+#SBATCH --job-name=sumArray
+#SBATCH --output=sumArray.o%j
 
 #module load gcc mpich slurm cuda11.8
 
 
-./hello
+./sumArraysOnGPU
 
