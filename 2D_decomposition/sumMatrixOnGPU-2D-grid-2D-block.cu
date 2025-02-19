@@ -130,18 +130,28 @@ int main(int argc, char **argv)
     CHECK(cudaMemcpy(d_MatB, h_B, nBytes, cudaMemcpyHostToDevice));
 
     // invoke kernel at host side
-    int dimx = 16;
-    int dimy = 64;
+    int dimx = 32;
+    int dimy = 32;
     dim3 block(dimx, dimy);
     dim3 grid((nx + block.x - 1) / block.x, (ny + block.y - 1) / block.y);
 
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
     iStart = seconds();
+    cudaEventRecord(start,0);
     sumMatrixOnGPU2D<<<grid, block>>>(d_MatA, d_MatB, d_MatC, nx, ny);
-    CHECK(cudaDeviceSynchronize());
+    cudaEventRecord(stop,0);
+    cudaEventSynchronize(stop);
+    CHECK(cudaDeviceSynchronize()); 
     iElaps = seconds() - iStart;
+    float elapsedTime;
+    cudaEventElapsedTime(&elapsedTime,start,stop);
     printf("sumMatrixOnGPU2D <<<(%d,%d), (%d,%d)>>> elapsed %f sec\n", grid.x,
            grid.y,
            block.x, block.y, iElaps);
+    printf("Kernel execution time: %f ms\n", elapsedTime);
     // check kernel error
     CHECK(cudaGetLastError());
 
