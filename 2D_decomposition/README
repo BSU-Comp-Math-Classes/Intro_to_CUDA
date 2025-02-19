@@ -1,0 +1,1 @@
+This set of CUDA kernels explores different possibilities of 2D thread and block organization.
