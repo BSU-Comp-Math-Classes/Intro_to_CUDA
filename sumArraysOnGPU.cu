@@ -54,10 +54,10 @@ void sumArraysOnHost(float *A, float *B, float *C, const int N)
 
 __global__ void sumArraysOnGPU(float *A, float *B, float *C, const int N)
 {
-  //int i = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = threadIdx.x;
-
-  if (i < N) C[i] = A[i] + B[i];
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  //int i = threadIdx.x;
+  //printf("Thread %d\n",i);
+  if(i<N) C[i] = A[i] + B[i];
 }
 
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     //cudaSetDevice(dev);
 
     // set up data size of vectors
-    int nElem = 1024;
+    int nElem = 2048;
     printf("Vector size %d\n", nElem);
 
     // malloc host memory
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     cudaMemcpy(d_B, h_B, nBytes, cudaMemcpyHostToDevice);
     cudaMemcpy(d_C, gpuRef, nBytes, cudaMemcpyHostToDevice);
 
-    int nBlocks = 1;
+    int nBlocks = 2;
     int nThreads = 1024;
     
     sumArraysOnGPU<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);

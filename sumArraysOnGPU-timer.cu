@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     CHECK(cudaSetDevice(dev));
 
     // set up data size of vectors
-    int nElem = 1 << 24; //binary left-shift operation = 2^24
+    int nElem = 1 << 28; //binary left-shift operation = 2^24
     printf("Vector size %d\n", nElem);
 
     // malloc host memory
