@@ -36,6 +36,7 @@ void initialData(int *ip, int size)
 
 void dotProductOnHost(int *A, int *B, int *C, const int N)
 {
+  
     for (int idx = 0; idx < N; idx++)
     {
         *C += A[idx] * B[idx];
@@ -81,6 +82,7 @@ __global__ void dotProductOnGPU_sharedAtomic(int *A, int *B, int *C, const int N
 {
   int temp;
   __shared__ int c_block;
+  c_block = 0;
     
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -113,7 +115,7 @@ int main(int argc, char **argv)
   CHECK(cudaSetDevice(dev));
   
   // set up data size of vectors
-  int nElem = 1 << 20;
+  int nElem = 1 << 28;
   printf("Vector size %d\n", nElem);
   
   // malloc host memory
@@ -158,12 +160,12 @@ int main(int argc, char **argv)
   int nBlocks =  ((nElem + nThreads - 1) / nThreads);
   
   iStart = seconds();
-  //  dotProductOnGPU_globalAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
-  //    dotProductOnGPU_sharedAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
-    //dotProductOnGPU<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
+   dotProductOnGPU_globalAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
+  //dotProductOnGPU_sharedAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
+  //  dotProductOnGPU<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
   CHECK(cudaDeviceSynchronize());
   iElaps = seconds() - iStart;
-  printf("dotProductOnGPU <<<  %d, %d  >>>  Time elapsed %f sec\n", nBlocks,
+  printf("dotProductOnGPU_globalAtomic <<<  %d, %d  >>>  Time elapsed %f sec\n", nBlocks,
 	 nThreads, iElaps);
 
   
@@ -175,8 +177,33 @@ int main(int argc, char **argv)
   
   // check device results
   checkResult(host_result, gpu_result);
+  CHECK(cudaMemset(d_C, 0, sizeof(int))); //set d_C to zero on the device
 
-  iStart = seconds();
+
+  
+iStart = seconds();
+  // dotProductOnGPU_globalAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
+  dotProductOnGPU_sharedAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
+  //  dotProductOnGPU<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
+  CHECK(cudaDeviceSynchronize());
+  iElaps = seconds() - iStart;
+  printf("dotProductOnGPU_sharedAtomic <<<  %d, %d  >>>  Time elapsed %f sec\n", nBlocks,
+	 nThreads, iElaps);
+
+  
+  // check kernel error
+  CHECK(cudaGetLastError()) ;
+  
+  // copy kernel result back to host side
+  CHECK(cudaMemcpy(&gpu_result, d_C, sizeof(int), cudaMemcpyDeviceToHost));
+  
+  // check device results
+  checkResult(host_result, gpu_result);
+  CHECK(cudaMemset(d_C, 0, sizeof(int))); //set d_C to zero on the device
+
+
+
+iStart = seconds();
   // dotProductOnGPU_globalAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
   //dotProductOnGPU_sharedAtomic<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
     dotProductOnGPU<<<nBlocks, nThreads>>>(d_A, d_B, d_C, nElem);
